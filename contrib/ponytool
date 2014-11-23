@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+usage() {
+   echo "Usage: $0 DEVICE COMMAND PARAMETERS"
+   echo
+   echo "Valid Commands:"
+   echo "  SET  RGB       : sets colour to 24 bit colour value RGB."
+   echo
+   echo "Example: ponytool /dev/ttyUSB0 SET 255000000"
+   exit 1
+}
+
+DEVICE=$1
+COMMAND=$2
+PARAMETER=$3
+
+# Make interface redirectable
+stty -F $DEVICE cs8 -cstopb -parenb 9600
+
+case "$COMMAND" in
+   "SET")
+      if [ $PARAMETER -eq $PARAMETER 2>/dev/null ]; then
+         echo "RGB:$PARAMETER" > $DEVICE
+      else
+         usage
+      fi
+      ;;
+    *)
+      usage
+esac
