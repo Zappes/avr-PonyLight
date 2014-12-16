@@ -1,21 +1,51 @@
 #!/usr/bin/env bash
 
 usage() {
-   echo "Usage: $0 DEVICE"
+   echo "Usage: $0 -d DEVICE [ -m MODE ]"
+   echo "   Mode must be one of hourly, minutely or secondly"
    echo
    echo "Example: ponyclock /dev/ttyUSB0"
    exit 1
 }
 
-PONYDEVICE=$1
-
-if [ ! -c "$PONYDEVICE" ]; then
-   usage
-fi
+while [[ $# > 1 ]]; do
+   key="$1"
+   shift
+   case $key in
+      -d|--device)
+         PONYDEVICE=$1
+         if [ ! -c "$PONYDEVICE" ]; then
+            usage
+         fi
+         shift
+         ;;
+      -m|--mode)
+         MODE="$1"
+         if [ "$MODE" != "hourly" ] && [ "$MODE" != "minutely" ] && [ "$MODE" != "secondly" ]; then
+            usage
+         fi
+         shift
+         ;;
+      *)
+         usage
+      ;;
+   esac
+done
 
 while true; do
-   itis=$(printf '%03d\n' 0x$(date +%H))$(printf '%03d\n' 0x$(date +%M))$(printf '%03d\n' 0x$(date +%S))
+   itis=$(printf '%03d\n' 0x$(date +%H))
+   if [ "$MODE" == "hourly" ]; then
+      itis+="000000"
+      SLEEPTIME=3600
+   elif [ "$MODE" == "minutely" ]; then
+      itis+=$(printf '%03d\n' 0x$(date +%M))000
+      SLEEPTIME=60
+   else
+      itis+=$(printf '%03d\n' 0x$(date +%M))
+      itis+=$(printf '%03d\n' 0x$(date +%S))
+      SLEEPTIME=1
+   fi
    ponytool $PONYDEVICE SET $itis
-   sleep 1
+   sleep $SLEEPTIME
 done
 
