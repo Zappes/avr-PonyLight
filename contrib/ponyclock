@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+usage() {
+   echo "Usage: $0 DEVICE"
+   echo
+   echo "Example: ponyclock /dev/ttyUSB0"
+   exit 1
+}
+
+PONYDEVICE=$1
+
+if [ ! -c "$PONYDEVICE" ]; then
+   usage
+fi
+
+while true; do
+   itis=$(printf '%03d\n' 0x$(date +%H))$(printf '%03d\n' 0x$(date +%M))$(printf '%03d\n' 0x$(date +%S))
+   ponytool $PONYDEVICE SET $itis
+   sleep 1
+done
+
